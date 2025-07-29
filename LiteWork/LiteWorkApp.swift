@@ -1,19 +1,11 @@
-//
-//  LiteWorkApp.swift
-//  LiteWork
-//
-//  Created by Brandon Aubrey on 3/17/25.
-//
-
 import SwiftUI
 import SwiftData
 
 @main
 struct LiteWorkApp: App {
-    var sharedModelContainer: ModelContainer = {
-        let schema = Schema([
-            Item.self,
-        ])
+    
+    private var sharedModelContainer: ModelContainer = {
+        let schema = Schema([Exercise.self])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 
         do {
@@ -22,11 +14,43 @@ struct LiteWorkApp: App {
             fatalError("Could not create ModelContainer: \(error)")
         }
     }()
+    
+    init() {
+        prePopulateDatabase()
+    }
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            HomeView()
         }
-        .modelContainer(sharedModelContainer)
+        .modelContainer(for: Exercise.self)
+    }
+    
+    private func prePopulateDatabase() {
+        // Remove raw string
+        guard !UserDefaults.standard.bool(forKey: "DefaultWorkouts") else { return }
+        UserDefaults.standard.set(true, forKey: "DefaultWorkouts")
+
+        
+        for exercise in MasterExerciseList.UpperBody {
+            sharedModelContainer.mainContext.insert(Exercise(name: exercise, group: .upperBody, type: .weighted))
+        }
+        
+        for exercise in MasterExerciseList.LowerBody {
+            sharedModelContainer.mainContext.insert(Exercise(name: exercise, group: .lowerBody, type: .weighted))
+        }
+        
+        for exercise in MasterExerciseList.CalisenthenicAbs {
+            sharedModelContainer.mainContext.insert(Exercise(name: exercise, group: .calisthenicsCore, type: .calisthenic))
+        }
+        
+        // TODO: Log erroring later
+//        do {
+//            try? sharedModelContainer.mainContext.save()
+//        } catch {
+//            print("error")
+//        }
+        
+
     }
 }
